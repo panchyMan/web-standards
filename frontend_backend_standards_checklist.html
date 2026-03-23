@@ -1,0 +1,251 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.wrap { padding: 1rem 0; }
+.tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.tab { padding: 8px 18px; border-radius: var(--border-radius-md); border: 1.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-secondary); cursor: pointer; font-size: 14px; font-weight: 500; transition: all .15s; }
+.tab.active { background: var(--color-text-primary); color: var(--color-background-primary); border-color: var(--color-text-primary); }
+.progress-bar { height: 6px; background: var(--color-border-tertiary); border-radius: 9999px; margin-bottom: 20px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 9999px; background: var(--color-text-primary); transition: width .4s ease; }
+.progress-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 8px; }
+.section { margin-bottom: 20px; }
+.section-title { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--color-border-tertiary); }
+.item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 10px; border-radius: var(--border-radius-md); cursor: pointer; transition: background .12s; user-select: none; }
+.item:hover { background: var(--color-background-secondary); }
+.item.checked .label { color: var(--color-text-tertiary); text-decoration: line-through; }
+.checkbox { width: 18px; height: 18px; min-width: 18px; border: 1.5px solid var(--color-border-secondary); border-radius: 5px; display: flex; align-items: center; justify-content: center; transition: all .12s; margin-top: 1px; }
+.item.checked .checkbox { background: var(--color-text-primary); border-color: var(--color-text-primary); }
+.check-svg { opacity: 0; transition: opacity .1s; }
+.item.checked .check-svg { opacity: 1; }
+.label { font-size: 14px; color: var(--color-text-primary); line-height: 1.5; }
+.badge { font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 99px; white-space: nowrap; margin-left: auto; }
+.badge-must { background: var(--color-background-danger); color: var(--color-text-danger); }
+.badge-rec { background: var(--color-background-info); color: var(--color-text-info); }
+.badge-perf { background: var(--color-background-success); color: var(--color-text-success); }
+.badge-sec { background: var(--color-background-warning); color: var(--color-text-warning); }
+.summary { margin-top: 20px; padding: 12px 14px; border-radius: var(--border-radius-lg); background: var(--color-background-secondary); border: 1px solid var(--color-border-tertiary); font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+</style>
+<div class="wrap">
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('fe')">Frontend</div>
+    <div class="tab" onclick="showTab('be')">Backend</div>
+    <div class="tab" onclick="showTab('shared')">Shared / DevOps</div>
+  </div>
+  <div class="progress-label" id="prog-label">0 of 0 checked</div>
+  <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+  <div id="content"></div>
+  <div class="summary" id="summary"></div>
+</div>
+<script>
+const data = {
+  fe: [
+    { section: "Performance & Optimization", items: [
+      { label: "Code splitting & lazy loading (dynamic imports)", badge: "must" },
+      { label: "Tree shaking to eliminate dead code", badge: "must" },
+      { label: "Image optimization (WebP/AVIF, lazy loading, responsive srcset)", badge: "must" },
+      { label: "Bundle size analysis (Webpack Bundle Analyzer / Vite visualizer)", badge: "rec" },
+      { label: "Font optimization (subset, preload, font-display: swap)", badge: "rec" },
+      { label: "Minification & compression (Brotli / gzip)", badge: "must" },
+      { label: "Critical CSS inlining / CSS-in-JS extraction", badge: "rec" },
+    ]},
+    { section: "Data Fetching & Caching", items: [
+      { label: "TanStack Query (React Query) for server state & caching", badge: "rec" },
+      { label: "Optimistic updates for instant UI feedback", badge: "rec" },
+      { label: "Stale-while-revalidate (SWR) strategy", badge: "rec" },
+      { label: "Request deduplication & pagination handling", badge: "rec" },
+    ]},
+    { section: "Validation & Type Safety", items: [
+      { label: "Zod for runtime schema validation (forms, API responses)", badge: "must" },
+      { label: "TypeScript strict mode enabled", badge: "must" },
+      { label: "React Hook Form + Zod resolver for form validation", badge: "rec" },
+      { label: "API type generation from OpenAPI / tRPC", badge: "rec" },
+    ]},
+    { section: "SEO", items: [
+      { label: "Semantic HTML (h1–h6 hierarchy, landmarks, alt text)", badge: "must" },
+      { label: "Meta tags: title, description, og:image, og:title", badge: "must" },
+      { label: "Structured data (JSON-LD / schema.org)", badge: "rec" },
+      { label: "Canonical URLs & proper redirects", badge: "must" },
+      { label: "robots.txt + sitemap.xml", badge: "must" },
+      { label: "SSR / SSG for crawlable content (Next.js, Nuxt, Astro)", badge: "rec" },
+      { label: "Core Web Vitals: LCP, FID/INP, CLS", badge: "must" },
+    ]},
+    { section: "Accessibility (a11y)", items: [
+      { label: "ARIA roles & labels on interactive elements", badge: "must" },
+      { label: "Keyboard navigation & focus management", badge: "must" },
+      { label: "Color contrast ratio ≥ 4.5:1 (WCAG AA)", badge: "must" },
+      { label: "Screen reader testing (NVDA, VoiceOver)", badge: "rec" },
+      { label: "Skip-to-content link", badge: "rec" },
+    ]},
+    { section: "State Management", items: [
+      { label: "Zustand / Jotai for lightweight global state", badge: "rec" },
+      { label: "Server state separated from client state", badge: "must" },
+      { label: "Avoid prop drilling (context or atom-based state)", badge: "rec" },
+    ]},
+    { section: "Error Handling & Monitoring", items: [
+      { label: "Error boundaries around critical UI sections", badge: "must" },
+      { label: "Sentry / Datadog for frontend error tracking", badge: "rec" },
+      { label: "User-friendly error messages (no raw stack traces)", badge: "must" },
+      { label: "Graceful loading & skeleton states", badge: "rec" },
+    ]},
+    { section: "Security (Frontend)", items: [
+      { label: "Content Security Policy (CSP) headers", badge: "sec" },
+      { label: "Never store tokens in localStorage (use httpOnly cookies)", badge: "sec" },
+      { label: "Sanitize user-generated content (DOMPurify)", badge: "sec" },
+      { label: "Avoid dangerouslySetInnerHTML without sanitization", badge: "sec" },
+    ]},
+    { section: "Testing", items: [
+      { label: "Unit tests (Vitest / Jest)", badge: "must" },
+      { label: "Component tests (Testing Library)", badge: "must" },
+      { label: "E2E tests (Playwright / Cypress)", badge: "rec" },
+      { label: "Visual regression tests (Chromatic / Percy)", badge: "rec" },
+    ]},
+  ],
+  be: [
+    { section: "Security", items: [
+      { label: "Authentication: JWT (short-lived) + refresh token rotation", badge: "sec" },
+      { label: "Authorization: role-based access control (RBAC) / ABAC", badge: "sec" },
+      { label: "Input validation on every endpoint (Zod, Joi, class-validator)", badge: "sec" },
+      { label: "SQL injection prevention (parameterized queries / ORM)", badge: "sec" },
+      { label: "Rate limiting & throttling (per IP / per user)", badge: "sec" },
+      { label: "CORS: whitelist specific origins only", badge: "sec" },
+      { label: "Helmet.js (HTTP security headers: HSTS, X-Frame, etc.)", badge: "sec" },
+      { label: "Secrets in environment variables, never in code (dotenv / Vault)", badge: "sec" },
+      { label: "bcrypt / Argon2 for password hashing", badge: "sec" },
+      { label: "HTTPS enforced, HSTS header set", badge: "sec" },
+      { label: "Dependency audit (npm audit / Snyk) in CI", badge: "sec" },
+    ]},
+    { section: "API Design", items: [
+      { label: "RESTful conventions or GraphQL / tRPC consistency", badge: "must" },
+      { label: "Versioned API (e.g. /api/v1/...)", badge: "must" },
+      { label: "Consistent error response schema (code, message, details)", badge: "must" },
+      { label: "Pagination on list endpoints (cursor or offset)", badge: "must" },
+      { label: "OpenAPI / Swagger documentation", badge: "rec" },
+      { label: "Request/response DTOs with strict types", badge: "must" },
+    ]},
+    { section: "Database", items: [
+      { label: "ORM / query builder (Prisma, Drizzle, TypeORM)", badge: "rec" },
+      { label: "Database migrations versioned in source control", badge: "must" },
+      { label: "Indexes on frequently queried / foreign key columns", badge: "must" },
+      { label: "Connection pooling (pg-pool, PrismaPool)", badge: "must" },
+      { label: "Soft deletes where audit trail matters", badge: "rec" },
+      { label: "Read replicas for heavy read workloads", badge: "rec" },
+    ]},
+    { section: "Caching", items: [
+      { label: "Redis for session store and hot-path caching", badge: "rec" },
+      { label: "Cache-Control headers on API responses where appropriate", badge: "rec" },
+      { label: "Cache invalidation strategy (TTL + explicit purge)", badge: "must" },
+    ]},
+    { section: "Error Handling & Logging", items: [
+      { label: "Centralized error handler (Express middleware / NestJS filters)", badge: "must" },
+      { label: "Structured logging (JSON): level, timestamp, traceId", badge: "must" },
+      { label: "Log aggregation (Datadog, Loki, CloudWatch)", badge: "rec" },
+      { label: "Distributed tracing (OpenTelemetry + Jaeger / Tempo)", badge: "rec" },
+      { label: "Never log sensitive data (PII, tokens, passwords)", badge: "sec" },
+    ]},
+    { section: "Performance", items: [
+      { label: "N+1 query detection & prevention (DataLoader / eager loading)", badge: "must" },
+      { label: "Background jobs for heavy tasks (BullMQ, Temporal)", badge: "rec" },
+      { label: "Health check endpoint (/health, /readiness)", badge: "must" },
+      { label: "Graceful shutdown handling (SIGTERM)", badge: "must" },
+    ]},
+    { section: "Testing", items: [
+      { label: "Unit tests for service / domain logic", badge: "must" },
+      { label: "Integration tests for API endpoints (supertest)", badge: "must" },
+      { label: "Mocked external services in tests", badge: "rec" },
+      { label: "Test coverage threshold (≥ 70%)", badge: "rec" },
+    ]},
+  ],
+  shared: [
+    { section: "Version Control", items: [
+      { label: "Conventional commits (feat:, fix:, chore:...)", badge: "must" },
+      { label: "Branch protection: require PR review + CI pass", badge: "must" },
+      { label: "Semantic versioning (semver) for releases", badge: "rec" },
+    ]},
+    { section: "CI/CD", items: [
+      { label: "Lint + type-check + tests on every PR (GitHub Actions / GitLab CI)", badge: "must" },
+      { label: "Automated deployment to staging on merge to main", badge: "rec" },
+      { label: "Container images scanned for vulnerabilities (Trivy / Snyk)", badge: "sec" },
+      { label: "Environment-specific config (dev / staging / prod)", badge: "must" },
+      { label: "Preview deployments per PR (Vercel, Render, Railway)", badge: "rec" },
+    ]},
+    { section: "Containerization", items: [
+      { label: "Docker with multi-stage builds (smaller prod images)", badge: "rec" },
+      { label: "Non-root user in Dockerfile", badge: "sec" },
+      { label: "docker-compose for local dev with all services", badge: "rec" },
+    ]},
+    { section: "Observability", items: [
+      { label: "Uptime monitoring with alerting (Better Uptime, Grafana)", badge: "must" },
+      { label: "Error tracking (Sentry) on both FE and BE", badge: "must" },
+      { label: "Performance dashboards (p50, p95, p99 latency)", badge: "rec" },
+    ]},
+    { section: "Documentation", items: [
+      { label: "README with setup, env vars, and run instructions", badge: "must" },
+      { label: "ADR (Architecture Decision Records) for major decisions", badge: "rec" },
+      { label: "Onboarding guide for new developers", badge: "rec" },
+    ]},
+  ],
+};
+
+const badges = { must: 'must', rec: 'recommended', perf: 'performance', sec: 'security' };
+const badgeClass = { must: 'badge-must', rec: 'badge-rec', perf: 'badge-perf', sec: 'badge-sec' };
+let current = 'fe';
+let checked = {};
+
+function getKey(tab, si, ii) { return `${tab}_${si}_${ii}`; }
+
+function render() {
+  const sections = data[current];
+  let total = 0, done = 0;
+  Object.keys(data).forEach(tab => {
+    data[tab].forEach((s, si) => s.items.forEach((_, ii) => {
+      total++;
+      if (checked[getKey(tab, si, ii)]) done++;
+    }));
+  });
+  document.getElementById('prog-label').textContent = `${done} of ${total} checked across all tabs`;
+  document.getElementById('prog-fill').style.width = total ? (done/total*100)+'%' : '0%';
+
+  let html = '';
+  sections.forEach((s, si) => {
+    html += `<div class="section"><div class="section-title">${s.section}</div>`;
+    s.items.forEach((item, ii) => {
+      const key = getKey(current, si, ii);
+      const isChecked = !!checked[key];
+      html += `<div class="item${isChecked?' checked':''}" onclick="toggle('${key}')">
+        <div class="checkbox">
+          <svg class="check-svg" width="12" height="12" viewBox="0 0 12 12">
+            <path d="M2 6l3 3 5-5" stroke="var(--color-background-primary)" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="label">${item.label}</span>
+        <span class="badge ${badgeClass[item.badge]}">${badges[item.badge]}</span>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  document.getElementById('content').innerHTML = html;
+
+  const tabDone = {};
+  Object.keys(data).forEach(tab => {
+    let t = 0, d = 0;
+    data[tab].forEach((s, si) => s.items.forEach((_, ii) => { t++; if(checked[getKey(tab,si,ii)]) d++; }));
+    tabDone[tab] = { t, d };
+  });
+  document.getElementById('summary').innerHTML =
+    `<strong>Frontend</strong> ${tabDone.fe.d}/${tabDone.fe.t} &nbsp;·&nbsp; <strong>Backend</strong> ${tabDone.be.d}/${tabDone.be.t} &nbsp;·&nbsp; <strong>Shared/DevOps</strong> ${tabDone.shared.d}/${tabDone.shared.t} &nbsp;·&nbsp; <strong>Total</strong> ${done}/${total}`;
+}
+
+function toggle(key) {
+  checked[key] = !checked[key];
+  render();
+}
+
+function showTab(tab) {
+  current = tab;
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', ['fe','be','shared'][i]===tab));
+  render();
+}
+
+render();
+</script>
